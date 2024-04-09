@@ -4,53 +4,75 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit
 }
 
-# Function to enable Windows Optional Feature
-function Enable-WindowsFeature($FeatureName) {
-    $result = Enable-WindowsOptionalFeature -Online -FeatureName $FeatureName -NoRestart
-    if ($result -and $result.ExitCode -eq 0) {
-        Write-Host "Feature '$FeatureName' enabled successfully."
-    } else {
-        Write-Host "Failed to enable feature '$FeatureName'."
-    }
-}
+# Install IIS Server
+Install-WindowsFeature -Name Web-Server -IncludeManagementTools
 
-# List of IIS Features to enable
-$IISFeatures = @(
-    "IIS-WebServerRole",
-    "IIS-WebServer",
-    "IIS-CommonHttpFeatures",
-    "IIS-HttpErrors",
-    "IIS-HttpRedirect",
-    "IIS-ApplicationDevelopment",
-    "IIS-NetFxExtensibility45",
-    "IIS-HealthAndDiagnostics",
-    "IIS-HttpLogging",
-    "IIS-LoggingLibraries",
-    "IIS-RequestMonitor",
-    "IIS-HttpTracing",
-    "IIS-Security",
-    "IIS-RequestFiltering",
-    "IIS-Performance",
-    "IIS-WebServerManagementTools",
-    "IIS-ManagementConsole",
-    "IIS-ASPNET45",
-    "IIS-ISAPIExtensions",
-    "IIS-ISAPIFilter",
-    "IIS-DefaultDocument",
-    "IIS-StaticContent"
-)
+# Install ASP.NET Features
+Install-WindowsFeature -Name Web-Asp-Net45
 
-# Install IIS Features
-foreach ($feature in $IISFeatures) {
-    Enable-WindowsFeature $feature
-}
+# Install IIS Management Scripts and Tools
+Install-WindowsFeature -Name Web-Mgmt-Tools
 
-# Check if restart is required
-$restartRequired = (Get-WindowsOptionalFeature -Online | Where-Object { $_.State -eq "Pending" }).Count -gt 0
+# Install IIS 6 Metabase Compatibility
+Install-WindowsFeature -Name Web-Metabase
 
-if ($restartRequired) {
-    Write-Host "Restarting the system to apply changes..."
-    Restart-Computer -Force
-} else {
-    Write-Host "IIS installation completed successfully."
-}
+# Install IIS 6 Management Compatibility
+Install-WindowsFeature -Name Web-Lgcy-Mgmt-Console
+
+# Install IIS Request Filtering
+Install-WindowsFeature -Name Web-Filtering
+
+# Install IIS URL Rewrite
+Install-WindowsFeature -Name Web-Url-Rewrite
+
+# Install IIS Static Content Compression
+Install-WindowsFeature -Name Web-Stat-Compression
+
+# Install IIS Dynamic Content Compression
+Install-WindowsFeature -Name Web-Dyn-Compression
+
+# Install IIS Default Document
+Install-WindowsFeature -Name Web-Default-Doc
+
+# Install IIS HTTP Errors
+Install-WindowsFeature -Name Web-Http-Errors
+
+# Install IIS HTTP Redirection
+Install-WindowsFeature -Name Web-Http-Redirect
+
+# Install IIS Static Content
+Install-WindowsFeature -Name Web-Static-Content
+
+# Install IIS Dynamic Content
+Install-WindowsFeature -Name Web-Dynamic-Content
+
+# Install IIS Client Certificate Mapping Authentication
+Install-WindowsFeature -Name Web-Client-Auth
+
+# Install IIS IIS Windows Authentication
+Install-WindowsFeature -Name Web-Windows-Auth
+
+# Install IIS Digest Authentication
+Install-WindowsFeature -Name Web-Digest-Auth
+
+# Install IIS Basic Authentication
+Install-WindowsFeature -Name Web-Basic-Auth
+
+# Install IIS IIS Server Side Includes
+Install-WindowsFeature -Name Web-Includes
+
+# Install IIS ASP.NET
+Install-WindowsFeature -Name Web-Asp-Net
+
+# Install IIS ASP
+Install-WindowsFeature -Name Web-Asp
+
+# Install IIS CGI
+Install-WindowsFeature -Name Web-CGI
+
+# Install IIS ISAPI Extensions
+Install-WindowsFeature -Name Web-ISAPI-Ext
+
+# Install IIS ISAPI Filters
+Install-WindowsFeature -Name Web-ISAPI-Filter
+
