@@ -2,26 +2,65 @@
 
 set -e
 
-# Find latest backup
-BACKUP_DIR=$(ls -td $HOME/.dotfiles.backup.* | head -1)
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
-if [ -z "$BACKUP_DIR" ]; then
-    echo "No backup directory found!"
+# Logger functions
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')] $1${NC}"
+}
+
+error() {
+    echo -e "${RED}[ERROR] $1${NC}"
     exit 1
-fi
+}
 
-echo "Rolling back to backup in $BACKUP_DIR"
+warn() {
+    echo -e "${YELLOW}[WARNING] $1${NC}"
+}
 
-# Restore files if they exist in backup
-restore_if_exists() {
-    if [ -e "$BACKUP_DIR/$(basename $1)" ]; then
-        echo "Restoring $1"
-        cp -R "$BACKUP_DIR/$(basename $1)" "$1"
+# Find latest backup
+find_latest_backup() {
+    local backup_dir=$(ls -td "$HOME"/.dotfiles.backup.* 2>/dev/null | head -1)
+    if [ -z "$backup_dir" ]; then
+        error "No backup directory found!"
+    fi
+    echo "$backup_dir"
+}
+
+# Restore a file from backup
+restore_file() {
+    local backup_dir="$1"
+    local file="$2"
+    local target="$3"
+
+    if [ -e "$backup_dir/$file" ]; then
+        log "Restoring $target"
+        rm -rf "$target"
+        cp -R "$backup_dir/$file" "$target"
+    else
+        warn "No backup found for $target"
     fi
 }
 
-restore_if_exists "$HOME/.zshrc"
-restore_if_exists "$HOME/.tmux.conf"
-restore_if_exists "$HOME/.config/nvim"
+# Main rollback function
+main() {
+    log "Starting rollback process..."
 
-echo "Rollback complete! Please restart your terminal."
+    local backup_dir=$(find_latest_backup)
+    log "Rolling back to backup in $backup_dir"
+
+    # Restore configurations
+    restore_file "$backup_dir" ".zshrc" "$HOME/.zshrc"
+    restore_file "$backup_dir" ".tmux.conf" "$HOME/.tmux.conf"
+    restore_file "$backup_dir" "nvim" "$HOME/.config/nvim"
+
+    log "Rollback completed successfully!"
+    log "Please restart your terminal for changes to take effect."
+}
+
+# Run main rollback
+main

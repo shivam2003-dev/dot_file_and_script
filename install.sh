@@ -4,8 +4,10 @@ set -e
 
 BACKUP_DIR="$HOME/.dotfiles.backup.$(date +%Y%m%d_%H%M%S)"
 CONFIG_DIR="$HOME/.config"
-NVIM_AUTOLOAD_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/site/autoload"
-NVIM_PLUGIN_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/plugged"
+NVIM_CONFIG_DIR="$CONFIG_DIR/nvim"
+NVIM_DATA_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvim"
+NVIM_AUTOLOAD_DIR="$NVIM_DATA_DIR/site/autoload"
+NVIM_PLUGIN_DIR="$NVIM_DATA_DIR/plugged"
 FONT_DIR="$HOME/.local/share/fonts"
 
 # Create backup directory
@@ -24,7 +26,7 @@ backup_if_exists "$HOME/.tmux.conf"
 backup_if_exists "$HOME/.config/nvim"
 
 # Create necessary directories
-mkdir -p "$CONFIG_DIR/nvim"
+mkdir -p "$NVIM_CONFIG_DIR"
 mkdir -p "$NVIM_AUTOLOAD_DIR"
 mkdir -p "$NVIM_PLUGIN_DIR"
 mkdir -p "$FONT_DIR"
@@ -33,12 +35,15 @@ mkdir -p "$FONT_DIR"
 echo "Installing Nerd Fonts..."
 FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/JetBrainsMono.zip"
 FONT_ZIP="/tmp/JetBrainsMono.zip"
+
+echo "Downloading font from: $FONT_URL"
 curl -fLo "$FONT_ZIP" "$FONT_URL"
 if [ $? -ne 0 ]; then
     echo "Failed to download JetBrainsMono font"
     exit 1
 fi
 
+echo "Unzipping fonts to: $FONT_DIR"
 unzip -o "$FONT_ZIP" -d "$FONT_DIR"
 if [ $? -ne 0 ]; then
     echo "Failed to unzip font files"
@@ -47,16 +52,12 @@ fi
 rm "$FONT_ZIP"
 fc-cache -fv
 
-# Install Oh-My-Zsh if not installed
-if [ ! -d "$HOME/.oh-my-zsh" ]; then
-    echo "Installing Oh-My-Zsh..."
-    RUNZSH=no CHSH=yes sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
-
-# Install vim-plug for Neovim
+# Install vim-plug
 echo "Installing vim-plug..."
-if [ ! -f "$NVIM_AUTOLOAD_DIR/plug.vim" ]; then
-    curl -fLo "$NVIM_AUTOLOAD_DIR/plug.vim" --create-dirs \
+PLUG_FILE="$NVIM_AUTOLOAD_DIR/plug.vim"
+if [ ! -f "$PLUG_FILE" ]; then
+    echo "Downloading vim-plug to: $PLUG_FILE"
+    curl -fLo "$PLUG_FILE" --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
     if [ $? -ne 0 ]; then
@@ -70,9 +71,10 @@ fi
 
 # Copy configurations
 echo "Installing configurations..."
+mkdir -p "$CONFIG_DIR"
 cp .zshrc "$HOME/.zshrc"
 cp .tmux.conf "$HOME/.tmux.conf"
-cp -r .config/nvim/* "$CONFIG_DIR/nvim/"
+cp -r .config/nvim/* "$NVIM_CONFIG_DIR/"
 cp .config/aliases.sh "$CONFIG_DIR/"
 
 # Verify tmux configuration
@@ -93,11 +95,13 @@ tmux kill-session -t test
 # Install Neovim plugins
 echo "Installing Neovim plugins..."
 if command -v nvim >/dev/null 2>&1; then
-    echo "Checking Neovim plugins installation..."
-    nvim --headless +PlugInstall +qall || {
+    echo "Running initial plugin installation..."
+    nvim --headless +PlugInstall +qall
+
+    if [ $? -ne 0 ]; then
         echo "Plugin installation failed. Please check Neovim's error messages."
         exit 1
-    }
+    fi
     echo "Neovim plugins installed successfully"
 else
     echo "Neovim not found. Please install Neovim first."
