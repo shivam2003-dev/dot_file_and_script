@@ -1,0 +1,20 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "A comprehensive dotfiles setup for DevOps engineers including configurations for Neovim, Tmux, and Zsh.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@ansible/ansible-language-server": "^1.2.3",
+    "bash-language-server": "^5.4.3",
+    "neovim": "^5.3.0",
+    "typescript-language-server": "^4.3.4",
+    "vscode-langservers-extracted": "^4.10.0",
+    "yaml-language-server": "^1.16.0"
+  }
+}
